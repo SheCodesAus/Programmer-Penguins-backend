@@ -59,6 +59,12 @@ Win-Wall is an online collaboration tool that provides organisers of She Codes w
 This tool offers an unlimited number of digital win walls which are organised by event collection in order to facilitate collaboration during live events and easily bring all attendees’ wins to light in real time.
 Win-Wall comes packed full of features such as the ability to share a unique digital win wall to a live audience, easily approve and export win wall messages to upload on a WordPress website, manage user roles to give event organisers and attendees access to different functionalities, and many more.
 
+---------------------------------------------------
+
+JobApp is an online platform designed to support job seekers especially junior candidates and career switchers throughout the job application process. It provides a centralised space where users can organise and track their applications, helping bring more structure and clarity to what can often feel like a stressful and fragmented experience.
+
+The platform aims to combine practical tools for managing applications with features that encourage consistency and motivation during the job search. By bringing everything into one place, JobApp helps users stay organised, focused, and supported as they work towards their career goals.
+
 ## Features
 
 > [!NOTE]  
