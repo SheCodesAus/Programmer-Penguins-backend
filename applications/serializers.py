@@ -19,6 +19,7 @@ class JobApplicationSerializer(serializers.ModelSerializer):
             "company_name",
             "source_platform",
             "source_platform_display",
+            "source_details",
             "job_url",
             "date_posted",
             "date_applied",
@@ -35,6 +36,7 @@ class JobApplicationSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
+            "user",
             "created_at",
             "updated_at",
             "source_platform_display",
@@ -49,6 +51,7 @@ class JobApplicationCreateUpdateSerializer(serializers.ModelSerializer):
             "job_title",
             "company_name",
             "source_platform",
+            "source_details",
             "job_url",
             "date_posted",
             "date_applied",
@@ -64,10 +67,20 @@ class JobApplicationCreateUpdateSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         salary_min = attrs.get("salary_min")
         salary_max = attrs.get("salary_max")
+        source_platform = attrs.get("source_platform")
+        source_details = attrs.get("source_details")
 
         if salary_min is not None and salary_max is not None and salary_min > salary_max:
             raise serializers.ValidationError(
                 {"salary_max": "salary_max must be greater than or equal to salary_min."}
             )
+
+        if source_platform == JobApplication.SourcePlatform.OTHER and not source_details:
+            raise serializers.ValidationError(
+                {"source_details": "Please specify the source when 'Other' is selected."}
+            )
+
+        if source_platform != JobApplication.SourcePlatform.OTHER:
+            attrs["source_details"] = ""
 
         return attrs
