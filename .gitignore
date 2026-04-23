@@ -128,3 +128,21 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# ======================
+# Django / Python
+# ======================
+
+__pycache__/
+*.py[cod]
+
+venv/
+env/
+
+db.sqlite3
+
+media/
+staticfiles/
+
+.vscode/
+.DS_Store
