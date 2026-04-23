@@ -6,7 +6,6 @@ class JobApplication(models.Model):
         SEEK = 'SEEK', 'Seek'
         LINKEDIN = 'LINKEDIN', 'LinkedIn'
         INDEED = 'INDEED', 'Indeed'
-        MANUAL = 'MANUAL', 'Manual'
         OTHER = 'OTHER', 'Other'
 
     class Status(models.TextChoices):
@@ -27,8 +26,9 @@ class JobApplication(models.Model):
     source_platform = models.CharField(
         max_length=20,
         choices=SourcePlatform.choices,
-        default=SourcePlatform.MANUAL
+        default=SourcePlatform.OTHER
     )
+    source_details = models.CharField(max_length=255, blank=True)
     job_url = models.URLField(blank=True)
     date_posted = models.DateField(null=True, blank=True)
     date_applied = models.DateField(null=True, blank=True)

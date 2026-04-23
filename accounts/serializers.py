@@ -39,6 +39,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             "phone",
             "linkedin_url",
             "gender",
+            "gender_self_described",
             "career_goal",
             "created_at",
             "updated_at",
@@ -50,6 +51,19 @@ class ProfileSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+    def validate(self, attrs):
+        gender = attrs.get("gender")
+        gender_self_described = attrs.get("gender_self_described")
+
+        if gender == "self_describe" and not gender_self_described:
+            raise serializers.ValidationError({
+                "gender_self_described": "This field is required when gender is 'self_describe'."
+            })
+
+        if gender != "self_describe":
+            attrs["gender_self_described"] = ""
+
+        return attrs
 
 class ProfileWithUserSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
@@ -66,6 +80,7 @@ class ProfileWithUserSerializer(serializers.ModelSerializer):
             "phone",
             "linkedin_url",
             "gender",
+            "gender_self_described",
             "career_goal",
             "created_at",
             "updated_at",
