@@ -120,10 +120,9 @@ This platform is designed for job seekers to simplify a typically fragmented and
 
 | HTTP Method | URL                             | Purpose                       | Request Body                                                                                       |
 | ----------- | ------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------- |
-| GET         | `/api/profile/me/`              | View current user profile     | N/A                                                                                                |
-| PATCH       | `/api/profile/me/`              | Partially update user profile | `{ "desired_role": "string", "industry": "string", "location": "string", "phone": "string", ... }` |
-| PUT         | `/api/profile/me/`              | Fully update user profile     | `{ "desired_role": "string", "industry": "string", "location": "string", "phone": "string", ... }` |
-| DELETE      | `/api/profile/me/` | Delete user profile           | N/A                                                                                                |
+| GET         | `/api/profile/me/`              | View current user account and profile details     | N/A                                                                                                |
+| PATCH         | `/api/profile/me/`              | Update current user account and profile details     | `{ "username": "string", "email": "string", "first_name": "string", "last_name": "string", "desired_role": "string", "industry": "string", "location": "string", "phone": "string", ... }` |
+| DELETE      | `/api/profile/me/` | Deactivate current user account (soft delete)           | N/A                                                                                                |
 
 ### Job Applications
 
