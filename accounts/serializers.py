@@ -27,12 +27,35 @@ class UserSerializer(serializers.ModelSerializer):
         ]
 
 
-class ProfileSerializer(serializers.ModelSerializer):
+class CombinedProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        source="user.username",
+        required=False,
+        allow_blank=False,
+    )
+    email = serializers.EmailField(
+        source="user.email",
+        required=False,
+    )
+    first_name = serializers.CharField(
+        source="user.first_name",
+        required=False,
+        allow_blank=True,
+    )
+    last_name = serializers.CharField(
+        source="user.last_name",
+        required=False,
+        allow_blank=True,
+    )
+
     class Meta:
         model = Profile
         fields = [
             "id",
-            "user",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
             "desired_role",
             "industry",
             "years_of_experience",
@@ -47,7 +70,6 @@ class ProfileSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
-            "user",
             "created_at",
             "updated_at",
         ]
@@ -61,33 +83,48 @@ class ProfileSerializer(serializers.ModelSerializer):
                 "gender_self_described": "This field is required when gender is 'self_describe'."
             })
 
-        if gender != "self_describe":
+        if gender and gender != "self_describe":
             attrs["gender_self_described"] = ""
+
+        user_data = attrs.get("user", {})
+        username = user_data.get("username")
+        email = user_data.get("email")
+
+        if username:
+            username_exists = User.objects.filter(username=username).exclude(
+                pk=self.instance.user.pk
+            ).exists()
+
+            if username_exists:
+                raise serializers.ValidationError({
+                    "username": "This username is already taken."
+                })
+
+        if email:
+            email_exists = User.objects.filter(email=email).exclude(
+                pk=self.instance.user.pk
+            ).exists()
+
+            if email_exists:
+                raise serializers.ValidationError({
+                    "email": "This email is already registered."
+                })
 
         return attrs
 
-class ProfileWithUserSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
+    def update(self, instance, validated_data):
+        user_data = validated_data.pop("user", {})
 
-    class Meta:
-        model = Profile
-        fields = [
-            "id",
-            "user",
-            "desired_role",
-            "industry",
-            "years_of_experience",
-            "location",
-            "phone",
-            "linkedin_url",
-            "gender",
-            "gender_self_described",
-            "career_goal",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = [
-            "id",
-            "created_at",
-            "updated_at",
-        ]
+        user = instance.user
+
+        for attr, value in user_data.items():
+            setattr(user, attr, value)
+
+        user.save()
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+
+        return instance
