@@ -147,7 +147,19 @@ This platform is designed for job seekers to simplify a typically fragmented and
 | ------ | --------------------------------------------- | -------------------------- | --------------------------------------------- |
 | GET    | `/api/applications/?status=APPLIED`           | Filter by status           | `/api/applications/?status=APPLIED`           |
 | GET    | `/api/applications/?source_platform=LINKEDIN` | Filter by source           | `/api/applications/?source_platform=LINKEDIN` |
-| GET    | `/api/applications/?is_active=true`           | Filter active applications | `/api/applications/?is_active=true`           |
+| GET    | `/api/applications/?is_active=true`           | Filter active applications | `/api/applications/?is_active=true`           |   
+
+### Admin User Management
+| Method | Endpoint                    | Description                      |
+| ------ | --------------------------- | -------------------------------- |
+| GET    | `/api/profile/admin/users/` | Retrieve all users with profiles |
+| GET    | `/api/profile/admin/users/<id>/` | Retrieve specific user  |
+| PATCH  | `/api/profile/admin/users/<id>/` | Update user and profile |
+| PATCH  | `/api/profile/admin/users/<id>/deactivate/` | Deactivate user account |
+| PATCH  | `/api/profile/admin/users/<id>/restore/` | Restore previously deactivated user |
+
+
+
 
 ### Object Definitions
 
