@@ -5,6 +5,7 @@ from .views import (
     AdminUserDetailView,
     AdminRestoreUserView,
     AdminDeactivateUserView,
+    GoogleLogin,
 )
 
 urlpatterns = [
@@ -13,4 +14,5 @@ urlpatterns = [
     path("admin/users/<int:pk>/", AdminUserDetailView.as_view()),
     path("admin/users/<int:pk>/restore/", AdminRestoreUserView.as_view()),
     path("admin/users/<int:pk>/deactivate/", AdminDeactivateUserView.as_view()),
+    path("google/", GoogleLogin.as_view(), name="google_login"),
 ]
