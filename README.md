@@ -5,13 +5,7 @@
 
 JOBBUDDY is an online portal designed to support junior job candidates and career switchers throughout the job application process. It provides a centralised space where users can organise and track their applications, helping bring more structure and clarity to what can often feel like a stressful, fragmented and overwhelming experience.
 
-The platform aims to combine practical tools for managing applications with features that make the job seeking process structured and organised rather than segmented. The platform also contains a  motivational aspect for when the user is feeling demotivated during the job search process. By having one central repository where all aspects of each application can be stored, JOBBUDDY helps users stay organised, focused, and supported as they work towards their career goals.
-
----------------------------------------------------
-
-JobApp is an online platform designed to support job seekers especially junior candidates and career switchers throughout the job application process. It provides a centralised space where users can organise and track their applications, helping bring more structure and clarity to what can often feel like a stressful and fragmented experience.
-
-The platform aims to combine practical tools for managing applications with features that encourage consistency and motivation during the job search. By bringing everything into one place, JobApp helps users stay organised, focused, and supported as they work towards their career goals.
+The platform aims to combine practical tools for managing applications with features that make the job seeking process structured and organised rather than segmented. It also includes a  motivational aspect for when the user is feeling demotivated during the job search process. By having one central repository where all aspects of each application can be stored, JOBBUDDY helps users stay organised, focused, and supported as they work towards their career goals.
 
 ## Features
 
@@ -55,7 +49,7 @@ Applications are grouped by status:
   - Interviewing
   - Offer
   - Rejected
-Withdrawn
+  - Withdrawn
 Quick overview of application progress
 Ability to create new applications directly from each column
 
@@ -63,7 +57,7 @@ Ability to create new applications directly from each column
 Filter applications by:
   - Status
   - Source Platform
-Active/Inactive state
+  - Active/Inactive state
 Sort applications by most recent activity
 
 ### Flexible Data Structure
@@ -110,7 +104,7 @@ This platform has two primary target audiences: job seekers who are junior candi
 
 Job seekers will use this platform to track and manage their job applications in one central place. They can record applications from different platforms (such as LinkedIn, Seek, Indeed), monitor their progress through various stages, and keep notes related to each opportunity.
 
-This platform is targeted at job seekers to simplify a typically fragmented and overwhelming process, while also supporting the emotional aspect of a job-seeking journey
+This platform is designed for job seekers to simplify a typically fragmented and overwhelming process, while also supporting the emotional aspect of a job-seeking journey.
 
 ## Back-end Implementation
 ### API Specification
@@ -126,10 +120,9 @@ This platform is targeted at job seekers to simplify a typically fragmented and 
 
 | HTTP Method | URL                             | Purpose                       | Request Body                                                                                       |
 | ----------- | ------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------- |
-| GET         | `/api/profile/me/`              | View current user profile     | N/A                                                                                                |
-| PATCH       | `/api/profile/me/`              | Partially update user profile | `{ "desired_role": "string", "industry": "string", "location": "string", "phone": "string", ... }` |
-| PUT         | `/api/profile/me/`              | Fully update user profile     | `{ "desired_role": "string", "industry": "string", "location": "string", "phone": "string", ... }` |
-| DELETE      | `/api/profile/me/` | Delete user profile           | N/A                                                                                                |
+| GET         | `/api/profile/me/`              | View current user account and profile details     | N/A                                                                                                |
+| PATCH         | `/api/profile/me/`              | Update current user account and profile details     | `{ "username": "string", "email": "string", "first_name": "string", "last_name": "string", "desired_role": "string", "industry": "string", "location": "string", "phone": "string", ... }` |
+| DELETE      | `/api/profile/me/` | Deactivate current user account (soft delete)           | N/A                                                                                                |
 
 ### Job Applications
 
@@ -154,7 +147,19 @@ This platform is targeted at job seekers to simplify a typically fragmented and 
 | ------ | --------------------------------------------- | -------------------------- | --------------------------------------------- |
 | GET    | `/api/applications/?status=APPLIED`           | Filter by status           | `/api/applications/?status=APPLIED`           |
 | GET    | `/api/applications/?source_platform=LINKEDIN` | Filter by source           | `/api/applications/?source_platform=LINKEDIN` |
-| GET    | `/api/applications/?is_active=true`           | Filter active applications | `/api/applications/?is_active=true`           |
+| GET    | `/api/applications/?is_active=true`           | Filter active applications | `/api/applications/?is_active=true`           |   
+
+### Admin User Management
+| Method | Endpoint                    | Description                      |
+| ------ | --------------------------- | -------------------------------- |
+| GET    | `/api/profile/admin/users/` | Retrieve all users with profiles |
+| GET    | `/api/profile/admin/users/<id>/` | Retrieve specific user  |
+| PATCH  | `/api/profile/admin/users/<id>/` | Update user and profile |
+| PATCH  | `/api/profile/admin/users/<id>/deactivate/` | Deactivate user account |
+| PATCH  | `/api/profile/admin/users/<id>/restore/` | Restore previously deactivated user |
+
+
+
 
 ### Object Definitions
 
