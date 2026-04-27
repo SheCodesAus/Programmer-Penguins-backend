@@ -15,10 +15,10 @@ import os
 import dj_database_url
 from dotenv import load_dotenv
 
-load_dotenv("../.env")
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(BASE_DIR / ".env")
 
 
 # Quick-start development settings - unsuitable for production
@@ -162,7 +162,29 @@ REST_FRAMEWORK = {
     ],
 }
 
-ACCOUNT_LOGIN_METHODS = {'email'}
-ACCOUNT_SIGNUP_FIELDS = ['username*', 'email*', 'password1*', 'password2*']
-ACCOUNT_EMAIL_VERIFICATION = 'none'
+ACCOUNT_LOGIN_METHODS = {"email"}
+ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
+ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_UNIQUE_EMAIL = True
+
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
+
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "APP": {
+            "client_id": os.environ.get("GOOGLE_CLIENT_ID"),
+            "secret": os.environ.get("GOOGLE_CLIENT_SECRET"),
+            "key": "",
+        },
+        "SCOPE": [
+            "profile",
+            "email",
+        ],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+        },
+    }
+}
