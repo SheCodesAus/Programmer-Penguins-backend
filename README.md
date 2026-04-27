@@ -126,37 +126,48 @@ This platform is designed for job seekers to simplify a typically fragmented and
 
 ### Job Applications
 
-| HTTP Method | URL                       | Purpose                                   | Request Body                                                                                                        |
-| ----------- | ------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| GET         | `/api/applications/`      | Get all job applications for current user | N/A                                                                                                                 |
-| POST        | `/api/applications/`      | Create a new job application              | `{ "job_title": "string", "company_name": "string", "source_platform": "string", "source_details": "string", ... }` |
-| GET         | `/api/applications/<id>/` | Retrieve a specific job application       | N/A                                                                                                                 |
-| PATCH       | `/api/applications/<id>/` | Partially update job application          | `{ "status": "string", "notes": "string", ... }`                                                                    |
-| PUT         | `/api/applications/<id>/` | Fully update job application              | `{ "job_title": "string", "company_name": "string", ... }`                                                          |
-| DELETE      | `/api/applications/<id>/` | Delete job application                    | N/A                                                                                                                 |
+| HTTP Method | URL | Purpose | Request Body |
+| ----------- | --- | ------- | ------------ |
+| GET | `/api/applications/` | Get all job applications for the current user | N/A |
+| POST | `/api/applications/` | Create a new job application | `{ "job_title": "string", "company_name": "string", "source_platform": "string", "source_details": "string", ... }` |
+| GET | `/api/applications/<id>/` | Retrieve a specific job application owned by the current user | N/A |
+| PATCH | `/api/applications/<id>/` | Partially update a job application owned by the current user | `{ "status": "string", "notes": "string", ... }` |
+| DELETE | `/api/applications/<id>/` | Deactivate a job application owned by the current user (soft delete) | N/A |
 
 ### Kanban View
 
-| HTTP Method | URL                         | Purpose                                                           | Request Body |
-| ----------- | --------------------------- | ----------------------------------------------------------------- | ------------ |
-| GET         | `/api/applications/kanban/` | Get all applications for kanban board (frontend groups by status) | N/A          |
+| HTTP Method | URL | Purpose | Request Body |
+| ----------- | --- | ------- | ------------ |
+| GET | `/api/applications/kanban/` | Get active applications for the current user's Kanban board | N/A |
 
 ### Filtering (Query Parameters)
 
-| Method | URL                                           | Purpose                    | Example                                       |
-| ------ | --------------------------------------------- | -------------------------- | --------------------------------------------- |
-| GET    | `/api/applications/?status=APPLIED`           | Filter by status           | `/api/applications/?status=APPLIED`           |
-| GET    | `/api/applications/?source_platform=LINKEDIN` | Filter by source           | `/api/applications/?source_platform=LINKEDIN` |
-| GET    | `/api/applications/?is_active=true`           | Filter active applications | `/api/applications/?is_active=true`           |   
+| Method | URL | Purpose | Example |
+| ------ | --- | ------- | ------- |
+| GET | `/api/applications/?status=APPLIED` | Filter by status | `/api/applications/?status=APPLIED` |
+| GET | `/api/applications/?source_platform=LINKEDIN` | Filter by source platform | `/api/applications/?source_platform=LINKEDIN` |
+| GET | `/api/applications/?is_active=true` | Filter active applications | `/api/applications/?is_active=true` |
+| GET | `/api/applications/?is_active=false` | Filter inactive/deactivated applications | `/api/applications/?is_active=false` |
 
 ### Admin User Management
-| Method | Endpoint                    | Description                      |
-| ------ | --------------------------- | -------------------------------- |
-| GET    | `/api/profile/admin/users/` | Retrieve all users with profiles |
-| GET    | `/api/profile/admin/users/<id>/` | Retrieve specific user  |
-| PATCH  | `/api/profile/admin/users/<id>/` | Update user and profile |
-| PATCH  | `/api/profile/admin/users/<id>/deactivate/` | Deactivate user account |
-| PATCH  | `/api/profile/admin/users/<id>/restore/` | Restore previously deactivated user |
+
+| Method | Endpoint | Description |
+| ------ | -------- | ----------- |
+| GET | `/api/profile/admin/users/` | Retrieve all users with profiles |
+| GET | `/api/profile/admin/users/<id>/` | Retrieve a specific user and profile |
+| PATCH | `/api/profile/admin/users/<id>/` | Update user and profile details |
+| PATCH | `/api/profile/admin/users/<id>/deactivate/` | Deactivate user account |
+| PATCH | `/api/profile/admin/users/<id>/restore/` | Restore previously deactivated user account |
+
+### Admin Job Application Management
+
+| Method | Endpoint | Description |
+| ------ | -------- | ----------- |
+| GET | `/api/applications/admin/` | Retrieve all job applications from all users |
+| GET | `/api/applications/admin/<id>/` | Retrieve a specific job application |
+| PATCH | `/api/applications/admin/<id>/` | Update any job application |
+| DELETE | `/api/applications/admin/<id>/` | Deactivate any job application (soft delete) |
+| PATCH | `/api/applications/admin/<id>/restore/` | Restore previously deactivated job application |
 
 
 
