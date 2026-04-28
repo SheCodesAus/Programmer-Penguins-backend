@@ -7,6 +7,7 @@ from .models import Profile
 from .serializers import CombinedProfileSerializer, AdminProfileSerializer
 
 
+
 class MyProfileView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CombinedProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -59,3 +60,9 @@ class AdminDeactivateUserView(APIView):
         profile.user.save()
 
         return Response({"detail": "User deactivated successfully."})
+    
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
+from dj_rest_auth.registration.views import SocialLoginView
+
+class GoogleLogin(SocialLoginView):
+    adapter_class = GoogleOAuth2Adapter
