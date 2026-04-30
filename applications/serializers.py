@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import JobApplication
+from .models import JobApplication, ApplicationContact
 
 
 class JobApplicationSerializer(serializers.ModelSerializer):
@@ -84,3 +84,24 @@ class JobApplicationCreateUpdateSerializer(serializers.ModelSerializer):
             attrs["source_details"] = ""
 
         return attrs
+    
+class ApplicationContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ApplicationContact
+        fields = [
+            "id",
+            "job_application",
+            "first_name",
+            "last_name",
+            "email",
+            "phone",
+            "note",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "updated_at",
+        ]

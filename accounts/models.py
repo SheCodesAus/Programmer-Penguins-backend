@@ -3,8 +3,8 @@ from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
 
 class GenderChoices(models.TextChoices):
-    WOMAN = "woman", "Woman"
-    MAN = "man", "Man"
+    FEMALE = "female", "Female"
+    MALE = "male", "Male"
     NON_BINARY = "non_binary", "Non-binary"
     PREFER_NOT_TO_SAY = "prefer_not_to_say", "Prefer not to say"
     SELF_DESCRIBE = "self_describe", "Self-describe"
