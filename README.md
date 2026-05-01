@@ -1,11 +1,11 @@
-# JOBBUDDY
+# JobTracker
 > programmer-penguins
 
 ## Mission Statement
 
-JOBBUDDY is an online portal designed to support junior job candidates and career switchers throughout the job application process. It provides a centralised space where users can organise and track their applications, helping bring more structure and clarity to what can often feel like a stressful, fragmented and overwhelming experience.
+JobTracker is an online portal designed to support junior job candidates and career switchers throughout the job application process. It provides a centralised space where users can organise and track their applications, helping bring more structure and clarity to what can often feel like a stressful, fragmented and overwhelming experience.
 
-The platform aims to combine practical tools for managing applications with features that make the job seeking process structured and organised rather than segmented. It also includes a  motivational aspect for when the user is feeling demotivated during the job search process. By having one central repository where all aspects of each application can be stored, JOBBUDDY helps users stay organised, focused, and supported as they work towards their career goals.
+The platform aims to combine practical tools for managing applications with features that make the job seeking process structured and organised rather than segmented. It also includes a  motivational aspect for when the user is feeling demotivated during the job search process. By having one central repository where all aspects of each application can be stored, JobTracker helps users stay organised, focused, and supported as they work towards their career goals.
 
 ## Features
 
@@ -134,6 +134,23 @@ This platform is designed for job seekers to simplify a typically fragmented and
 | PATCH | `/api/applications/<id>/` | Partially update a job application owned by the current user | `{ "status": "string", "notes": "string", ... }` |
 | DELETE | `/api/applications/<id>/` | Deactivate a job application owned by the current user (soft delete) | N/A |
 
+### Contacts within Job Application
+
+| HTTP Method | URL | Purpose | Request Body |
+| ----------- | --- | ------- | ------------ |
+| GET | `/api/applications/<job_id>/contacts/` | Get all active contacts for a specific job application owned by the current user | N/A |
+| POST | `/api/applications/<job_id>/contacts/` | Create a new contact for a specific job application | `{ "first_name": "string", "last_name": "string", "email": "string", "phone": "string", "note": "string" }` |
+
+### Individual Contact Management
+
+| HTTP Method | URL | Purpose | Request Body |
+| ----------- | --- | ------- | ------------ |
+| GET | `/api/applications/contacts/<id>/` | Retrieve a specific contact owned by the current user | N/A |
+| PATCH | `/api/applications/contacts/<id>/` | Partially update a contact owned by the current user | `{ "first_name": "string", "last_name": "string", "email": "string", "phone": "string", "note": "string" }` |
+| DELETE | `/api/applications/contacts/<id>/` | Deactivate a contact owned by the current user (soft delete) | N/A |
+| PATCH | `/api/applications/contacts/<id>/restore/` | Restore a previously deactivated contact owned by the current user | N/A |
+
+
 ### Kanban View
 
 | HTTP Method | URL | Purpose | Request Body |
@@ -169,7 +186,20 @@ This platform is designed for job seekers to simplify a typically fragmented and
 | DELETE | `/api/applications/admin/<id>/` | Deactivate any job application (soft delete) |
 | PATCH | `/api/applications/admin/<id>/restore/` | Restore previously deactivated job application |
 
+### Admin Contact Management
 
+| HTTP Method | URL | Purpose | Request Body |
+| ----------- | --- | ------- | ------------ |
+| GET | `/api/applications/admin/contacts/` | Retrieve all contacts from all job applications | N/A |
+| GET | `/api/applications/admin/contacts/?is_active=true` | Retrieve all active contacts from all job applications | N/A |
+| GET | `/api/applications/admin/contacts/?is_active=false` | Retrieve all deactivated contacts from all job applications | N/A |
+| GET | `/api/applications/admin/<job_id>/contacts/` | Retrieve all contacts for a specific job application | N/A |
+| GET | `/api/applications/admin/<job_id>/contacts/?is_active=true` | Retrieve active contacts for a specific job application | N/A |
+| GET | `/api/applications/admin/<job_id>/contacts/?is_active=false` | Retrieve deactivated contacts for a specific job application | N/A |
+| GET | `/api/applications/admin/contacts/<id>/` | Retrieve a specific contact | N/A |
+| PATCH | `/api/applications/admin/contacts/<id>/` | Partially update any contact | `{ "first_name": "string", "last_name": "string", "email": "string", "phone": "string", "note": "string", "is_active": true }` |
+| DELETE | `/api/applications/admin/contacts/<id>/` | Deactivate any contact (soft delete) | N/A |
+| PATCH | `/api/applications/admin/contacts/<id>/restore/` | Restore a previously deactivated contact | N/A |
 
 
 ### Object Definitions
@@ -187,42 +217,59 @@ This platform is designed for job seekers to simplify a typically fragmented and
 
 #### Profile
 
-| Field               | Data type |
-| ------------------- | --------- |
-| profile_id (PK)     | integer   |
-| user_id (FK)        | integer   |
-| desired_role        | string    |
-| industry            | string    |
-| years_of_experience | integer   |
-| location            | string    |
-| phone               | string    |
-| linkedin_url        | string    |
-| gender              | string    |
-| career_goal         | string    |
-| created_at          | datetime  |
-| updated_at          | datetime  |
+| Field                   | Data type |
+|------------------------|----------|
+| profile_id (PK)        | integer  |
+| user_id (FK)           | integer  |
+| desired_role           | string   |
+| industry               | string   |
+| years_of_experience    | integer  |
+| location               | string   |
+| phone                  | string   |
+| linkedin_url           | string   |
+| gender | enum (female, male, non_binary, prefer_not_to_say, self_describe) |
+| gender_self_described  | string   |
+| career_goal            | text     |
+| created_at             | datetime |
+| updated_at             | datetime |
 
 #### JobApplication
 
-| Field                  | Data type |
+| Field                  | Data type |
 | ---------------------- | --------- |
-| jobApplication_id (PK) | integer   |
-| user_id (FK)           | integer   |
-| job_title              | string    |
-| company_name           | string    |
-| source_platform        | string    |
-| job_url                | string    |
-| date_posted            | date      |
-| date_applied           | date      |
-| salary_min             | decimal   |
-| salary_max             | decimal   |
-| currency               | string    |
-| location               | string    |
-| status                 | string    |
-| notes                  | text      |
-| created_at             | datetime  |
-| updated_at             | datetime  |
-| is_active              | boolean   |
+| jobApplication_id (PK) | integer   |
+| user_id (FK)           | integer   |
+| job_title              | string    |
+| company_name           | string    |
+| source_platform        | enum (SEEK, LINKEDIN, INDEED, OTHER) |
+| source_details         | string    |
+| job_url                | string    |
+| date_posted            | date      |
+| date_applied           | date      |
+| salary_min             | decimal   |
+| salary_max             | decimal   |
+| currency               | string    |
+| location               | string    |
+| status                 | enum (FOUND, APPLIED, INTERVIEWING, OFFER, REJECTED, WITHDRAWN) |
+| notes                  | text      |
+| is_active              | boolean   |
+| created_at             | datetime  |
+| updated_at             | datetime  |
+
+#### ApplicationContact
+
+| Field                  | Data type |
+| ---------------------- | --------- |
+| applicationContact_id (PK) | integer |
+| jobApplication_id (FK) | integer |
+| first_name             | string    |
+| last_name              | string    |
+| email                  | string    |
+| phone                  | string    |
+| note                   | text      |
+| is_active              | boolean   |
+| created_at             | datetime  |
+| updated_at             | datetime  |
 
 ### Database Schema
 
@@ -232,7 +279,7 @@ This platform is designed for job seekers to simplify a typically fragmented and
 
 ### Wireframes
 
-See all wireframes and how users would see the JOBBUDDY website: https://www.figma.com/proto/KJ9w5Uzrb1T9WyJHEI1Are/Job-Buddy?node-id=1-6&p=f&t=Vl4M[…]OiPjBQ8-1&scaling=min-zoom&content-scaling=fixed&page-id=0%3A1
+See all wireframes and how users would see the JobTracker website: https://www.figma.com/proto/KJ9w5Uzrb1T9WyJHEI1Are/Job-Buddy?node-id=1-6&p=f&t=Vl4M[…]OiPjBQ8-1&scaling=min-zoom&content-scaling=fixed&page-id=0%3A1
 
 #### Home Page
 ![](./img/homepageJA.png)
@@ -244,6 +291,5 @@ See all wireframes and how users would see the JOBBUDDY website: https://www.fig
 ![](./img/jblogo.png)
 
 ### Colours & Font
-
 ![](./img/font.jpg)
 
