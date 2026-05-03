@@ -13,6 +13,7 @@ from .views import (
     AdminAllApplicationContactListView,
     AdminApplicationContactDetailView,
     AdminRestoreApplicationContactView,
+    ExtractJobFromUrlView,
 )
 
 urlpatterns = [
@@ -33,4 +34,5 @@ urlpatterns = [
     path("admin/<int:pk>/restore/", AdminRestoreJobApplicationView.as_view(), name="admin-jobapplication-restore"),
 
     path("<int:pk>/", JobApplicationDetailView.as_view(), name="jobapplication-detail"),
+    path("extract/", ExtractJobFromUrlView.as_view(), name="extract-job-from-url"),
 ]

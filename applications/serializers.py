@@ -9,6 +9,11 @@ class JobApplicationSerializer(serializers.ModelSerializer):
         source="get_source_platform_display",
         read_only=True,
     )
+    source_platform = serializers.ChoiceField(
+        choices=JobApplication.SourcePlatform.choices,
+        required=False,
+        allow_blank=True,
+    )
 
     class Meta:
         model = JobApplication
@@ -29,6 +34,7 @@ class JobApplicationSerializer(serializers.ModelSerializer):
             "location",
             "status",
             "status_display",
+            "interest_level",
             "notes",
             "is_active",
             "created_at",
@@ -45,6 +51,12 @@ class JobApplicationSerializer(serializers.ModelSerializer):
 
 
 class JobApplicationCreateUpdateSerializer(serializers.ModelSerializer):
+    source_platform = serializers.ChoiceField(
+        choices=JobApplication.SourcePlatform.choices,
+        required=False,
+        allow_blank=True,
+    )
+
     class Meta:
         model = JobApplication
         fields = [
@@ -60,6 +72,7 @@ class JobApplicationCreateUpdateSerializer(serializers.ModelSerializer):
             "currency",
             "location",
             "status",
+            "interest_level",
             "notes",
             "is_active",
         ]
@@ -67,21 +80,22 @@ class JobApplicationCreateUpdateSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         salary_min = attrs.get("salary_min")
         salary_max = attrs.get("salary_max")
-        source_platform = attrs.get("source_platform")
-        source_details = attrs.get("source_details")
+        source_platform = attrs.get("source_platform", "")
 
         if salary_min is not None and salary_max is not None and salary_min > salary_max:
             raise serializers.ValidationError(
                 {"salary_max": "salary_max must be greater than or equal to salary_min."}
             )
 
-        if source_platform == JobApplication.SourcePlatform.OTHER and not source_details:
-            raise serializers.ValidationError(
-                {"source_details": "Please specify the source when 'Other' is selected."}
-            )
-
         if source_platform != JobApplication.SourcePlatform.OTHER:
             attrs["source_details"] = ""
+
+        interest_level = attrs.get("interest_level")
+
+        if interest_level is not None and (interest_level < 0 or interest_level > 3):
+            raise serializers.ValidationError(
+                {"interest_level": "Interest level must be between 0 and 3."}
+            )
 
         return attrs
     

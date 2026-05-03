@@ -1,5 +1,11 @@
+import json
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urlparse
+
+from rest_framework.views import APIView
 from rest_framework import generics, permissions, status
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
 from .models import JobApplication, ApplicationContact
@@ -9,6 +15,86 @@ from .serializers import (
     ApplicationContactSerializer,
 )
 
+def detect_source_platform(url):
+    domain = urlparse(url).netloc.lower()
+
+    if "seek.com" in domain:
+        return JobApplication.SourcePlatform.SEEK
+    if "linkedin.com" in domain:
+        return JobApplication.SourcePlatform.LINKEDIN
+    if "indeed.com" in domain:
+        return JobApplication.SourcePlatform.INDEED
+
+    return JobApplication.SourcePlatform.OTHER
+
+def extract_json_ld_job_posting(soup):
+    scripts = soup.find_all("script", type="application/ld+json")
+
+    for script in scripts:
+        try:
+            data = json.loads(script.string)
+
+            if isinstance(data, list):
+                for item in data:
+                    if item.get("@type") == "JobPosting":
+                        return item
+
+            if isinstance(data, dict):
+                if data.get("@type") == "JobPosting":
+                    return data
+
+                graph = data.get("@graph", [])
+                for item in graph:
+                    if item.get("@type") == "JobPosting":
+                        return item
+
+        except Exception:
+            continue
+
+    return None
+
+def parse_job_posting_json_ld(data):
+    company = data.get("hiringOrganization", {})
+    location_data = data.get("jobLocation", {})
+    salary_data = data.get("baseSalary", {})
+
+    result = {
+        "job_title": data.get("title", "") or "",
+        "company_name": company.get("name", "") if isinstance(company, dict) else "",
+        "date_posted": data.get("datePosted"),
+        "location": "",
+        "currency": "AUD",
+        "salary_min": None,
+        "salary_max": None,
+    }
+
+    if isinstance(location_data, list) and location_data:
+        location_data = location_data[0]
+
+    if isinstance(location_data, dict):
+        address = location_data.get("address", {})
+        if isinstance(address, dict):
+            locality = address.get("addressLocality", "")
+            region = address.get("addressRegion", "")
+            country = address.get("addressCountry", "")
+
+            result["location"] = ", ".join(
+                part for part in [locality, region, country] if part
+            )
+
+    if isinstance(salary_data, dict):
+        result["currency"] = salary_data.get("currency", "AUD") or "AUD"
+
+        value = salary_data.get("value", {})
+        if isinstance(value, dict):
+            min_value = value.get("minValue")
+            max_value = value.get("maxValue")
+            single_value = value.get("value")
+
+            result["salary_min"] = min_value or single_value
+            result["salary_max"] = max_value or single_value
+
+    return result
 
 class JobApplicationListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -78,6 +164,60 @@ class KanbanJobApplicationView(generics.ListAPIView):
             is_active=True,
         ).order_by("-updated_at")
 
+
+class ExtractJobFromUrlView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        url = request.data.get("url", "").strip()
+
+        if not url:
+            return Response(
+                {"error": "URL is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        platform = detect_source_platform(url)
+
+        extracted_data = {
+            "job_title": "",
+            "company_name": "",
+            "source_platform": platform,
+            "source_details": "",
+            "job_url": url,
+            "date_posted": None,
+            "salary_min": None,
+            "salary_max": None,
+            "currency": "AUD",
+            "location": "",
+            "notes": "",
+        }
+
+        try:
+            response = requests.get(
+                url,
+                timeout=10,
+                headers={
+                    "User-Agent": "Mozilla/5.0"
+                },
+            )
+            response.raise_for_status()
+
+            soup = BeautifulSoup(response.text, "html.parser")
+
+            json_ld_data = extract_json_ld_job_posting(soup)
+
+            if json_ld_data:
+                extracted_data.update(parse_job_posting_json_ld(json_ld_data))
+            else:
+                title = soup.find("title")
+                if title:
+                    extracted_data["job_title"] = title.get_text(strip=True)
+
+        except Exception:
+            extracted_data["notes"] = "Could not fully extract details from this link."
+
+        return Response(extracted_data)
 
 class AdminJobApplicationListView(generics.ListAPIView):
     queryset = JobApplication.objects.select_related("user").order_by("-created_at")

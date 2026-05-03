@@ -7,6 +7,7 @@ class JobApplication(models.Model):
         LINKEDIN = 'LINKEDIN', 'LinkedIn'
         INDEED = 'INDEED', 'Indeed'
         OTHER = 'OTHER', 'Other'
+        NOT_SPECIFIED = '', 'Not specified'
 
     class Status(models.TextChoices):
         FOUND = 'FOUND', 'Found'
@@ -26,10 +27,11 @@ class JobApplication(models.Model):
     source_platform = models.CharField(
         max_length=20,
         choices=SourcePlatform.choices,
+        blank=True,
         default=SourcePlatform.OTHER
     )
     source_details = models.CharField(max_length=255, blank=True)
-    job_url = models.URLField(blank=True)
+    job_url = models.URLField(max_length=2000, blank=True)
     date_posted = models.DateField(null=True, blank=True)
     date_applied = models.DateField(null=True, blank=True)
     salary_min = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -37,6 +39,7 @@ class JobApplication(models.Model):
     currency = models.CharField(max_length=10, default='AUD')
     location = models.CharField(max_length=255, blank=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.FOUND)
+    interest_level = models.PositiveSmallIntegerField(default=0)
     notes = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
