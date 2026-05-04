@@ -8,11 +8,12 @@ from rest_framework import generics, permissions, status
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
-from .models import JobApplication, ApplicationContact
+from .models import JobApplication, ApplicationContact, ApplicationNote
 from .serializers import (
     JobApplicationSerializer,
     JobApplicationCreateUpdateSerializer,
     ApplicationContactSerializer,
+    ApplicationNoteSerializer,
 )
 
 def detect_source_platform(url):
@@ -419,3 +420,31 @@ class AdminApplicationContactListView(generics.ListAPIView):
                 queryset = queryset.filter(is_active=False)
 
         return queryset
+    
+
+class ApplicationNoteListCreateView(generics.ListCreateAPIView):
+    serializer_class = ApplicationNoteSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        job_id = self.kwargs["job_id"]
+        return ApplicationNote.objects.filter(
+            job_application__id=job_id,
+            job_application__user=self.request.user,
+        )
+
+    def perform_create(self, serializer):
+        job_id = self.kwargs["job_id"]
+        job = JobApplication.objects.get(id=job_id, user=self.request.user)
+        serializer.save(job_application=job)
+
+
+class ApplicationNoteDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = ApplicationNoteSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ["get", "patch", "delete"]
+
+    def get_queryset(self):
+        return ApplicationNote.objects.filter(
+            job_application__user=self.request.user
+        )

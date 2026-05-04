@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import JobApplication, ApplicationContact
+from .models import JobApplication, ApplicationContact, ApplicationNote
 
 
 class JobApplicationSerializer(serializers.ModelSerializer):
@@ -109,6 +109,23 @@ class ApplicationContactSerializer(serializers.ModelSerializer):
             "last_name",
             "email",
             "phone",
+            "note",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "updated_at",
+        ]
+class ApplicationNoteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ApplicationNote
+        fields = [
+            "id",
+            "job_application",
+            "title",
             "note",
             "is_active",
             "created_at",
