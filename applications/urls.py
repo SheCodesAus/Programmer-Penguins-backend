@@ -31,8 +31,8 @@ urlpatterns = [
     path("admin/contacts/<int:pk>/", AdminApplicationContactDetailView.as_view(), name="admin-application-contact-detail"),
     path("admin/contacts/<int:pk>/restore/", AdminRestoreApplicationContactView.as_view(), name="admin-application-contact-restore"),
 
-    path("<int:job_id>/notes/", ApplicationNoteListCreateView.as_view(), name="admin-application-notes-list"),
-    path("notes/<int:pk>/", ApplicationNoteDetailView.as_view(), name="admin-application-notes-detail"),
+    path("<int:job_id>/notes/", ApplicationNoteListCreateView.as_view(), name="application-notes-list"),
+    path("notes/<int:pk>/", ApplicationNoteDetailView.as_view(), name="application-notes-detail"),
     
     path("admin/", AdminJobApplicationListView.as_view(), name="admin-jobapplication-list"),
     path("admin/<int:pk>/", AdminJobApplicationDetailView.as_view(), name="admin-jobapplication-detail"),
