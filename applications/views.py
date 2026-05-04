@@ -448,3 +448,11 @@ class ApplicationNoteDetailView(generics.RetrieveUpdateDestroyAPIView):
         return ApplicationNote.objects.filter(
             job_application__user=self.request.user
         )
+    
+    def destroy(self, request, *args, **kwargs):
+        note = self.get_object()
+        note.delete()
+        return Response(
+            {"detail": "Note deleted successfully."},
+            status=status.HTTP_200_OK,
+        )
