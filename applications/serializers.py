@@ -35,7 +35,6 @@ class JobApplicationSerializer(serializers.ModelSerializer):
             "status",
             "status_display",
             "interest_level",
-            "notes",
             "is_active",
             "created_at",
             "updated_at",
@@ -73,7 +72,6 @@ class JobApplicationCreateUpdateSerializer(serializers.ModelSerializer):
             "location",
             "status",
             "interest_level",
-            "notes",
             "is_active",
         ]
 
