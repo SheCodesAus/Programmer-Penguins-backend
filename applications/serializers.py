@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import JobApplication, ApplicationContact
+from .models import JobApplication, ApplicationContact, ApplicationNote
 
 
 class JobApplicationSerializer(serializers.ModelSerializer):
@@ -35,7 +35,6 @@ class JobApplicationSerializer(serializers.ModelSerializer):
             "status",
             "status_display",
             "interest_level",
-            "notes",
             "is_active",
             "created_at",
             "updated_at",
@@ -73,7 +72,6 @@ class JobApplicationCreateUpdateSerializer(serializers.ModelSerializer):
             "location",
             "status",
             "interest_level",
-            "notes",
             "is_active",
         ]
 
@@ -116,6 +114,24 @@ class ApplicationContactSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
+            "job_application",
+            "created_at",
+            "updated_at",
+        ]
+class ApplicationNoteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ApplicationNote
+        fields = [
+            "id",
+            "job_application",
+            "title",
+            "note",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "job_application",
             "created_at",
             "updated_at",
         ]
