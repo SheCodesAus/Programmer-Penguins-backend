@@ -6,6 +6,8 @@ from .views import (
     AdminRestoreUserView,
     AdminDeactivateUserView,
     GoogleLogin,
+    PasswordResetRequestView, 
+    PasswordResetConfirmView,
 )
 
 urlpatterns = [
@@ -17,4 +19,6 @@ urlpatterns = [
     path("admin/users/<int:pk>/deactivate/", AdminDeactivateUserView.as_view(), name="admin-user-deactivate"),
 
     path("google/", GoogleLogin.as_view(), name="google_login"),
+    path("password-reset/", PasswordResetRequestView.as_view(), name="password-reset"),
+    path("password-reset-confirm/", PasswordResetConfirmView.as_view(), name="password-reset-confirm"),
 ]
