@@ -40,7 +40,6 @@ class JobApplication(models.Model):
     location = models.CharField(max_length=255, blank=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.FOUND)
     interest_level = models.PositiveSmallIntegerField(default=0)
-    notes = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -65,3 +64,17 @@ class ApplicationContact(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} - {self.job_application.company_name}"
+
+class ApplicationNote(models.Model):
+    job_application = models.ForeignKey(
+        JobApplication,
+        on_delete=models.CASCADE,
+        related_name="notes",
+    )
+    title = models.CharField(max_length=255, blank=True)
+    note = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.title} - {self.job_application.job_title}"
