@@ -95,9 +95,8 @@ class PasswordResetRequestView(APIView):
             "detail": "If this email exists, a password reset link has been sent."
         }
 
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
+        user = User.objects.filter(email=email).first()
+        if not user:
             return Response(success_message, status=status.HTTP_200_OK)
 
         token_generator = PasswordResetTokenGenerator()
