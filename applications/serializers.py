@@ -59,6 +59,7 @@ class JobApplicationCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobApplication
         fields = [
+            "id",
             "job_title",
             "company_name",
             "source_platform",
@@ -73,6 +74,9 @@ class JobApplicationCreateUpdateSerializer(serializers.ModelSerializer):
             "status",
             "interest_level",
             "is_active",
+        ]
+        read_only_fields = [
+            "id",
         ]
 
     def validate(self, attrs):
