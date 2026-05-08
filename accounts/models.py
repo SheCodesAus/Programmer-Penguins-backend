@@ -25,6 +25,7 @@ class Profile(models.Model):
     )
     gender_self_described = models.CharField(max_length=100, blank=True)
     career_goal = models.TextField(blank=True)
+    auto_archive_days = models.PositiveIntegerField(default=30)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

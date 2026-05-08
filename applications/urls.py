@@ -16,11 +16,20 @@ from .views import (
     ExtractJobFromUrlView,
     ApplicationNoteListCreateView,
     ApplicationNoteDetailView,
+    ArchivedApplicationsView,
+    DeletedApplicationsView,
+    ArchiveApplicationView,
+    RestoreApplicationView,
 )
 
 urlpatterns = [
     path("", JobApplicationListCreateView.as_view(), name="jobapplication-list-create"),
     path("kanban/", KanbanJobApplicationView.as_view(), name="jobapplication-kanban"),
+    path("archived/", ArchivedApplicationsView.as_view(), name="archived-applications"),
+    path("deleted/", DeletedApplicationsView.as_view(), name="deleted-applications"),
+    path("<int:pk>/archive/", ArchiveApplicationView.as_view(),name="archive-application"),
+    path("<int:pk>/restore/", RestoreApplicationView.as_view(), name="restore-application"),
+
 
     path("<int:job_id>/contacts/", ApplicationContactListCreateView.as_view(), name="application-contact-list-create"),
     path("contacts/<int:pk>/", ApplicationContactDetailView.as_view(), name="application-contact-detail"),
