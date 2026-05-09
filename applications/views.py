@@ -7,6 +7,8 @@ from rest_framework.views import APIView
 from rest_framework import generics, permissions, status
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+from django.utils import timezone
+from datetime import timedelta
 
 from .models import JobApplication, ApplicationContact, ApplicationNote
 from .serializers import (
@@ -160,9 +162,25 @@ class KanbanJobApplicationView(generics.ListAPIView):
     http_method_names = ["get"]
 
     def get_queryset(self):
+        profile = self.request.user.profile
+        auto_archive_days = profile.auto_archive_days or 30
+
+        cutoff_date = timezone.now() - timedelta(days=auto_archive_days)
+
+        JobApplication.objects.filter(
+            user=self.request.user,
+            is_active=True,
+            is_archived=False,
+            created_at__lte=cutoff_date,
+        ).update(
+            is_archived=True,
+            archived_at=timezone.now(),
+        )
+
         return JobApplication.objects.filter(
             user=self.request.user,
             is_active=True,
+            is_archived=False,
         ).order_by("-updated_at")
 
 
@@ -456,3 +474,67 @@ class ApplicationNoteDetailView(generics.RetrieveUpdateDestroyAPIView):
             {"detail": "Note deleted successfully."},
             status=status.HTTP_200_OK,
         )
+
+class ArchivedApplicationsView(generics.ListAPIView):
+    serializer_class = JobApplicationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return JobApplication.objects.filter(
+            user=self.request.user,
+            is_active=True,
+            is_archived=True,
+        ).order_by("-updated_at")
+
+class ArchiveApplicationView(generics.UpdateAPIView):
+    serializer_class = JobApplicationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return JobApplication.objects.filter(
+            user=self.request.user
+        )
+
+    def patch(self, request, *args, **kwargs):
+        application = self.get_object()
+
+        application.is_archived = True
+        application.archived_at = timezone.now()
+
+        application.save()
+
+        serializer = self.get_serializer(application)
+
+        return Response(serializer.data)
+    
+class DeletedApplicationsView(generics.ListAPIView):
+    serializer_class = JobApplicationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return JobApplication.objects.filter(
+            user=self.request.user,
+            is_active=False,
+        ).order_by("-updated_at")
+    
+class RestoreApplicationView(generics.UpdateAPIView):
+    serializer_class = JobApplicationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return JobApplication.objects.filter(
+            user=self.request.user
+        )
+
+    def patch(self, request, *args, **kwargs):
+        application = self.get_object()
+
+        application.is_archived = False
+        application.is_active = True
+        application.archived_at = None
+
+        application.save()
+
+        serializer = self.get_serializer(application)
+
+        return Response(serializer.data)

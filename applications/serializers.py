@@ -36,6 +36,8 @@ class JobApplicationSerializer(serializers.ModelSerializer):
             "status_display",
             "interest_level",
             "is_active",
+            "is_archived",
+            "archived_at",
             "created_at",
             "updated_at",
         ]
@@ -46,6 +48,8 @@ class JobApplicationSerializer(serializers.ModelSerializer):
             "updated_at",
             "source_platform_display",
             "status_display",
+            "is_archived",
+            "archived_at",
         ]
 
 
@@ -74,9 +78,12 @@ class JobApplicationCreateUpdateSerializer(serializers.ModelSerializer):
             "status",
             "interest_level",
             "is_active",
+            "is_archived",
+            "archived_at",
         ]
         read_only_fields = [
             "id",
+            "archived_at",
         ]
 
     def validate(self, attrs):

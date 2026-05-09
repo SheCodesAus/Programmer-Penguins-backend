@@ -66,6 +66,7 @@ class CombinedProfileSerializer(serializers.ModelSerializer):
             "gender",
             "gender_self_described",
             "career_goal",
+            "auto_archive_days",
             "created_at",
             "updated_at",
         ]
@@ -155,6 +156,7 @@ class AdminProfileSerializer(serializers.ModelSerializer):
             "gender",
             "gender_self_described",
             "career_goal",
+            "auto_archive_days",
             "created_at",
             "updated_at",
         ]
