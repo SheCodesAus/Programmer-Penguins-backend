@@ -8,7 +8,6 @@ from rest_framework import generics, permissions, status
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from django.utils import timezone
-from datetime import timedelta
 
 from .models import JobApplication, ApplicationContact, ApplicationNote
 from .serializers import (
@@ -17,6 +16,7 @@ from .serializers import (
     ApplicationContactSerializer,
     ApplicationNoteSerializer,
 )
+from .services import archive_inactive_applications, touch_job_application
 
 def detect_source_platform(url):
     domain = urlparse(url).netloc.lower()
@@ -162,20 +162,7 @@ class KanbanJobApplicationView(generics.ListAPIView):
     http_method_names = ["get"]
 
     def get_queryset(self):
-        profile = self.request.user.profile
-        auto_archive_days = profile.auto_archive_days or 30
-
-        cutoff_date = timezone.now() - timedelta(days=auto_archive_days)
-
-        JobApplication.objects.filter(
-            user=self.request.user,
-            is_active=True,
-            is_archived=False,
-            created_at__lte=cutoff_date,
-        ).update(
-            is_archived=True,
-            archived_at=timezone.now(),
-        )
+        archive_inactive_applications(self.request.user)
 
         return JobApplication.objects.filter(
             user=self.request.user,
@@ -298,6 +285,7 @@ class ApplicationContactListCreateView(generics.ListCreateAPIView):
         job_id = self.kwargs["job_id"]
         job = JobApplication.objects.get(id=job_id, user=self.request.user)
         serializer.save(job_application=job)
+        touch_job_application(job)
 
 
 class ApplicationContactDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -310,10 +298,15 @@ class ApplicationContactDetailView(generics.RetrieveUpdateDestroyAPIView):
             job_application__user=self.request.user
         )
 
+    def perform_update(self, serializer):
+        contact = serializer.save()
+        touch_job_application(contact.job_application)
+
     def destroy(self, request, *args, **kwargs):
         contact = self.get_object()
         contact.is_active = False
         contact.save()
+        touch_job_application(contact.job_application)
 
         return Response(
             {"detail": "Application contact has been deleted successfully."},
@@ -335,6 +328,7 @@ class RestoreApplicationContactView(generics.GenericAPIView):
         contact = self.get_object()
         contact.is_active = True
         contact.save()
+        touch_job_application(contact.job_application)
 
         return Response(
             {"detail": "Application contact has been restored successfully."},
@@ -370,10 +364,15 @@ class AdminApplicationContactDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return ApplicationContact.objects.all()
 
+    def perform_update(self, serializer):
+        contact = serializer.save()
+        touch_job_application(contact.job_application)
+
     def destroy(self, request, *args, **kwargs):
         contact = self.get_object()
         contact.is_active = False
         contact.save()
+        touch_job_application(contact.job_application)
 
         return Response(
             {"detail": "Application contact has been deleted successfully."},
@@ -393,6 +392,7 @@ class AdminRestoreApplicationContactView(generics.GenericAPIView):
         contact = self.get_object()
         contact.is_active = True
         contact.save()
+        touch_job_application(contact.job_application)
 
         return Response(
             {"detail": "Application contact has been restored successfully."},
@@ -455,6 +455,7 @@ class ApplicationNoteListCreateView(generics.ListCreateAPIView):
         job_id = self.kwargs["job_id"]
         job = JobApplication.objects.get(id=job_id, user=self.request.user)
         serializer.save(job_application=job)
+        touch_job_application(job)
 
 
 class ApplicationNoteDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -466,10 +467,16 @@ class ApplicationNoteDetailView(generics.RetrieveUpdateDestroyAPIView):
         return ApplicationNote.objects.filter(
             job_application__user=self.request.user
         )
+
+    def perform_update(self, serializer):
+        note = serializer.save()
+        touch_job_application(note.job_application)
     
     def destroy(self, request, *args, **kwargs):
         note = self.get_object()
+        job = note.job_application
         note.delete()
+        touch_job_application(job)
         return Response(
             {"detail": "Note deleted successfully."},
             status=status.HTTP_200_OK,
@@ -480,6 +487,8 @@ class ArchivedApplicationsView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        archive_inactive_applications(self.request.user)
+
         return JobApplication.objects.filter(
             user=self.request.user,
             is_active=True,
