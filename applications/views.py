@@ -7,16 +7,32 @@ from rest_framework.views import APIView
 from rest_framework import generics, permissions, status
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+from django.db.models import Prefetch
 from django.utils import timezone
 
-from .models import JobApplication, ApplicationContact, ApplicationNote
+from .models import (
+    ApplicationContact,
+    ApplicationEvent,
+    ApplicationNote,
+    ApplicationTask,
+    JobApplication,
+)
 from .serializers import (
     JobApplicationSerializer,
     JobApplicationCreateUpdateSerializer,
     ApplicationContactSerializer,
     ApplicationNoteSerializer,
+    ApplicationEventSerializer,
+    ApplicationTaskSerializer,
 )
-from .services import archive_inactive_applications, touch_job_application
+from .services import (
+    archive_inactive_applications,
+    complete_application_task,
+    handle_application_event_automation,
+    ensure_status_tasks,
+    reopen_application_task,
+    touch_job_application,
+)
 
 def detect_source_platform(url):
     domain = urlparse(url).netloc.lower()
@@ -130,7 +146,8 @@ class JobApplicationListCreateView(generics.ListCreateAPIView):
         return JobApplicationSerializer
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        application = serializer.save(user=self.request.user)
+        ensure_status_tasks(application)
 
 
 class JobApplicationDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -144,6 +161,10 @@ class JobApplicationDetailView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method == "PATCH":
             return JobApplicationCreateUpdateSerializer
         return JobApplicationSerializer
+
+    def perform_update(self, serializer):
+        application = serializer.save()
+        ensure_status_tasks(application)
 
     def destroy(self, request, *args, **kwargs):
         application = self.get_object()
@@ -168,6 +189,23 @@ class KanbanJobApplicationView(generics.ListAPIView):
             user=self.request.user,
             is_active=True,
             is_archived=False,
+        ).prefetch_related(
+            Prefetch(
+                "tasks",
+                queryset=ApplicationTask.objects.order_by(
+                    "completed_at",
+                    "due_at",
+                    "created_at",
+                ),
+                to_attr="prefetched_tasks",
+            ),
+            Prefetch(
+                "events",
+                queryset=ApplicationEvent.objects.filter(
+                    starts_at__gte=timezone.now()
+                ).order_by("starts_at"),
+                to_attr="prefetched_upcoming_events",
+            ),
         ).order_by("-updated_at")
 
 
@@ -241,6 +279,10 @@ class AdminJobApplicationDetailView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method == "PATCH":
             return JobApplicationCreateUpdateSerializer
         return JobApplicationSerializer
+
+    def perform_update(self, serializer):
+        application = serializer.save()
+        ensure_status_tasks(application)
 
     def destroy(self, request, *args, **kwargs):
         application = self.get_object()
@@ -481,6 +523,138 @@ class ApplicationNoteDetailView(generics.RetrieveUpdateDestroyAPIView):
             {"detail": "Note deleted successfully."},
             status=status.HTTP_200_OK,
         )
+
+
+class ApplicationTaskListCreateView(generics.ListCreateAPIView):
+    serializer_class = ApplicationTaskSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = ApplicationTask.objects.select_related("job_application").filter(
+            job_application__user=self.request.user,
+            job_application__is_active=True,
+        )
+
+        application_id = self.request.query_params.get("application")
+        completed = self.request.query_params.get("completed")
+
+        if application_id:
+            queryset = queryset.filter(job_application_id=application_id)
+
+        if completed is not None:
+            if completed.lower() == "true":
+                queryset = queryset.filter(completed_at__isnull=False)
+            elif completed.lower() == "false":
+                queryset = queryset.filter(completed_at__isnull=True)
+
+        return queryset.order_by("completed_at", "due_at", "created_at")
+
+    def perform_create(self, serializer):
+        task = serializer.save(auto_created=False)
+        touch_job_application(task.job_application)
+
+
+class ApplicationTaskDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = ApplicationTaskSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ["get", "patch", "delete"]
+
+    def get_queryset(self):
+        return ApplicationTask.objects.select_related("job_application").filter(
+            job_application__user=self.request.user
+        )
+
+    def perform_update(self, serializer):
+        task = serializer.save()
+        touch_job_application(task.job_application)
+
+    def perform_destroy(self, instance):
+        job_application = instance.job_application
+        instance.delete()
+        touch_job_application(job_application)
+
+
+class CompleteApplicationTaskView(generics.GenericAPIView):
+    serializer_class = ApplicationTaskSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ["patch"]
+
+    def get_queryset(self):
+        return ApplicationTask.objects.select_related("job_application").filter(
+            job_application__user=self.request.user
+        )
+
+    def patch(self, request, pk):
+        task = complete_application_task(self.get_object())
+        serializer = self.get_serializer(task)
+        return Response(serializer.data)
+
+
+class ReopenApplicationTaskView(generics.GenericAPIView):
+    serializer_class = ApplicationTaskSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ["patch"]
+
+    def get_queryset(self):
+        return ApplicationTask.objects.select_related("job_application").filter(
+            job_application__user=self.request.user
+        )
+
+    def patch(self, request, pk):
+        task = reopen_application_task(self.get_object())
+        serializer = self.get_serializer(task)
+        return Response(serializer.data)
+
+
+class ApplicationEventListCreateView(generics.ListCreateAPIView):
+    serializer_class = ApplicationEventSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = ApplicationEvent.objects.select_related("job_application").filter(
+            job_application__user=self.request.user,
+            job_application__is_active=True,
+        )
+
+        application_id = self.request.query_params.get("application")
+        upcoming = self.request.query_params.get("upcoming")
+
+        if application_id:
+            queryset = queryset.filter(job_application_id=application_id)
+
+        if upcoming is not None:
+            if upcoming.lower() == "true":
+                queryset = queryset.filter(starts_at__gte=timezone.now())
+            elif upcoming.lower() == "false":
+                queryset = queryset.filter(starts_at__lt=timezone.now())
+
+        return queryset.order_by("starts_at")
+
+    def perform_create(self, serializer):
+        event = serializer.save()
+        touch_job_application(event.job_application)
+        handle_application_event_automation(event)
+
+
+class ApplicationEventDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = ApplicationEventSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ["get", "patch", "delete"]
+
+    def get_queryset(self):
+        return ApplicationEvent.objects.select_related("job_application").filter(
+            job_application__user=self.request.user
+        )
+
+    def perform_update(self, serializer):
+        event = serializer.save()
+        touch_job_application(event.job_application)
+        handle_application_event_automation(event)
+
+    def perform_destroy(self, instance):
+        job_application = instance.job_application
+        instance.delete()
+        touch_job_application(job_application)
 
 class ArchivedApplicationsView(generics.ListAPIView):
     serializer_class = JobApplicationSerializer
