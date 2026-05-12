@@ -83,3 +83,94 @@ class ApplicationNote(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.job_application.job_title}"
+
+
+class ApplicationTask(models.Model):
+    class TaskType(models.TextChoices):
+        TAILOR_RESUME = "TAILOR_RESUME", "Tailor resume"
+        COVER_LETTER = "COVER_LETTER", "Prepare cover letter"
+        SUBMIT_APPLICATION = "SUBMIT_APPLICATION", "Submit application"
+        FOLLOW_UP = "FOLLOW_UP", "Follow up"
+        INTERVIEW_PREP = "INTERVIEW_PREP", "Prepare for interview"
+        INTERVIEW_FOLLOW_UP = "INTERVIEW_FOLLOW_UP", "Interview follow-up"
+        REJECTION_FEEDBACK = "REJECTION_FEEDBACK", "Ask for feedback"
+        OFFER_REVIEW = "OFFER_REVIEW", "Review offer"
+        CUSTOM = "CUSTOM", "Custom"
+
+    job_application = models.ForeignKey(
+        JobApplication,
+        on_delete=models.CASCADE,
+        related_name="tasks",
+    )
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    due_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    task_type = models.CharField(
+        max_length=40,
+        choices=TaskType.choices,
+        default=TaskType.CUSTOM,
+    )
+    source_status = models.CharField(
+        max_length=20,
+        choices=JobApplication.Status.choices,
+        blank=True,
+    )
+    auto_created = models.BooleanField(default=False)
+    is_required = models.BooleanField(default=True)
+    triggers_status_change_to = models.CharField(
+        max_length=20,
+        choices=JobApplication.Status.choices,
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["completed_at", "due_at", "created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["job_application", "task_type"],
+                condition=models.Q(auto_created=True),
+                name="unique_auto_task_per_application_type",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.title} - {self.job_application.job_title}"
+
+
+class ApplicationEvent(models.Model):
+    class EventType(models.TextChoices):
+        INTERVIEW = "INTERVIEW", "Interview"
+        CALL = "CALL", "Call"
+        DEADLINE = "DEADLINE", "Deadline"
+        OTHER = "OTHER", "Other"
+
+    job_application = models.ForeignKey(
+        JobApplication,
+        on_delete=models.CASCADE,
+        related_name="events",
+    )
+    title = models.CharField(max_length=255)
+    event_type = models.CharField(
+        max_length=20,
+        choices=EventType.choices,
+        default=EventType.INTERVIEW,
+    )
+    starts_at = models.DateTimeField()
+    ends_at = models.DateTimeField(null=True, blank=True)
+    location = models.CharField(max_length=255, blank=True)
+    meeting_link = models.URLField(max_length=2000, blank=True)
+    contact_name = models.CharField(max_length=255, blank=True)
+    contact_email = models.EmailField(blank=True)
+    contact_phone = models.CharField(max_length=50, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["starts_at"]
+
+    def __str__(self):
+        return f"{self.title} - {self.job_application.job_title}"

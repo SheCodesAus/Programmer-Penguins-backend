@@ -16,6 +16,12 @@ from .views import (
     ExtractJobFromUrlView,
     ApplicationNoteListCreateView,
     ApplicationNoteDetailView,
+    ApplicationTaskListCreateView,
+    ApplicationTaskDetailView,
+    CompleteApplicationTaskView,
+    ReopenApplicationTaskView,
+    ApplicationEventListCreateView,
+    ApplicationEventDetailView,
     ArchivedApplicationsView,
     DeletedApplicationsView,
     ArchiveApplicationView,
@@ -42,6 +48,14 @@ urlpatterns = [
 
     path("<int:job_id>/notes/", ApplicationNoteListCreateView.as_view(), name="application-notes-list"),
     path("notes/<int:pk>/", ApplicationNoteDetailView.as_view(), name="application-notes-detail"),
+
+    path("tasks/", ApplicationTaskListCreateView.as_view(), name="application-task-list-create"),
+    path("tasks/<int:pk>/", ApplicationTaskDetailView.as_view(), name="application-task-detail"),
+    path("tasks/<int:pk>/complete/", CompleteApplicationTaskView.as_view(), name="application-task-complete"),
+    path("tasks/<int:pk>/reopen/", ReopenApplicationTaskView.as_view(), name="application-task-reopen"),
+
+    path("events/", ApplicationEventListCreateView.as_view(), name="application-event-list-create"),
+    path("events/<int:pk>/", ApplicationEventDetailView.as_view(), name="application-event-detail"),
     
     path("admin/", AdminJobApplicationListView.as_view(), name="admin-jobapplication-list"),
     path("admin/<int:pk>/", AdminJobApplicationDetailView.as_view(), name="admin-jobapplication-detail"),
