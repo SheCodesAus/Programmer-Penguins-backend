@@ -7,6 +7,7 @@ from .views import (
     AdminJobApplicationDetailView,
     AdminRestoreJobApplicationView,
     ApplicationContactListCreateView, 
+    ApplicationContactAllListView,
     ApplicationContactDetailView,
     RestoreApplicationContactView,
     AdminApplicationContactListView,
@@ -37,6 +38,7 @@ urlpatterns = [
     path("<int:pk>/restore/", RestoreApplicationView.as_view(), name="restore-application"),
 
 
+    path("contacts/", ApplicationContactAllListView.as_view(), name="application-contact-all-list"),
     path("<int:job_id>/contacts/", ApplicationContactListCreateView.as_view(), name="application-contact-list-create"),
     path("contacts/<int:pk>/", ApplicationContactDetailView.as_view(), name="application-contact-detail"),
     path("contacts/<int:pk>/restore/", RestoreApplicationContactView.as_view(), name="application-contact-restore"),

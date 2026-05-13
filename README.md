@@ -84,6 +84,9 @@ Provide users with a motivational, streamlined, stress-free tracking and storage
 
 - Django / DRF API
 - Python
+- PostgreSQL (production) / SQLite (development)
+- Authentication: Django Allauth (Google OAuth)
+- Admin interface: Django Admin
 
 ### Front-End
 
@@ -115,14 +118,27 @@ This platform is designed for job seekers to simplify a typically fragmented and
 | POST        | `/api/auth/logout/`       | Allow users to log out (end active session) | N/A                                                                   |
 | POST        | `/api/auth/registration/` | Create a new user account                   | `{ "email": "string", "password1": "string", "password2": "string" }` |
 | GET         | `/api/auth/user/`         | Retrieve current authenticated user         | N/A                                                                   |
+| POST        | `/api/auth/google/`       | Google OAuth login                          | `{ "access_token": "string" }`                                        |
+| POST        | `/api/auth/password-reset/` | Request password reset                   | `{ "email": "string" }`                                                |
+| POST        | `/api/auth/password-reset-confirm/` | Confirm password reset             | `{ "uid": "string", "token": "string", "new_password1": "string", "new_password2": "string" }` |
 
 ### Profile
 
 | HTTP Method | URL                             | Purpose                       | Request Body                                                                                       |
 | ----------- | ------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------- |
 | GET         | `/api/profile/me/`              | View current user account and profile details     | N/A                                                                                                |
-| PATCH         | `/api/profile/me/`              | Update current user account and profile details     | `{ "username": "string", "email": "string", "first_name": "string", "last_name": "string", "desired_role": "string", "industry": "string", "location": "string", "phone": "string", ... }` |
-| DELETE      | `/api/profile/me/` | Deactivate current user account (soft delete)           | N/A                                                                                                |
+| PATCH       | `/api/profile/me/`              | Update current user account and profile details     | `{ "username": "string", "email": "string", "first_name": "string", "last_name": "string", "desired_role": "string", "industry": "string", "location": "string", "phone": "string", ... }` |
+| DELETE      | `/api/profile/me/`              | Deactivate current user account (soft delete)           | N/A                                                                                                |
+
+### Admin User Management
+
+| HTTP Method | URL                                  | Purpose                                   | Request Body |
+| ----------- | ------------------------------------ | ----------------------------------------- | ------------ |
+| GET         | `/api/profile/admin/users/`          | Retrieve all users with profiles          | N/A          |
+| GET         | `/api/profile/admin/users/<id>/`     | Retrieve a specific user and profile      | N/A          |
+| PATCH       | `/api/profile/admin/users/<id>/`     | Update user and profile details           | `{ "username": "string", "email": "string", ... }` |
+| PATCH       | `/api/profile/admin/users/<id>/deactivate/` | Deactivate user account             | N/A          |
+| PATCH       | `/api/profile/admin/users/<id>/restore/` | Restore previously deactivated user account | N/A          |
 
 ### Job Applications
 
@@ -133,6 +149,11 @@ This platform is designed for job seekers to simplify a typically fragmented and
 | GET | `/api/applications/<id>/` | Retrieve a specific job application owned by the current user | N/A |
 | PATCH | `/api/applications/<id>/` | Partially update a job application owned by the current user | `{ "status": "string", "notes": "string", ... }` |
 | DELETE | `/api/applications/<id>/` | Deactivate a job application owned by the current user (soft delete) | N/A |
+| GET | `/api/applications/archived/` | Get archived applications for the current user | N/A |
+| GET | `/api/applications/deleted/` | Get deleted applications for the current user | N/A |
+| PATCH | `/api/applications/<id>/archive/` | Archive a job application | N/A |
+| PATCH | `/api/applications/<id>/restore/` | Restore a job application | N/A |
+| POST | `/api/applications/extract/` | Extract job details from URL | `{ "url": "string" }` |
 
 ### Contacts within Job Application
 
@@ -151,6 +172,39 @@ This platform is designed for job seekers to simplify a typically fragmented and
 | PATCH | `/api/applications/contacts/<id>/restore/` | Restore a previously deactivated contact owned by the current user | N/A |
 
 
+### Application Notes
+
+| HTTP Method | URL | Purpose | Request Body |
+| ----------- | --- | ------- | ------------ |
+| GET | `/api/applications/<job_id>/notes/` | Get all notes for a specific job application | N/A |
+| POST | `/api/applications/<job_id>/notes/` | Create a new note for a specific job application | `{ "title": "string", "note": "string" }` |
+| GET | `/api/applications/notes/<id>/` | Retrieve a specific note | N/A |
+| PATCH | `/api/applications/notes/<id>/` | Partially update a note | `{ "title": "string", "note": "string" }` |
+| DELETE | `/api/applications/notes/<id>/` | Delete a note | N/A |
+
+### Application Tasks
+
+| HTTP Method | URL | Purpose | Request Body |
+| ----------- | --- | ------- | ------------ |
+| GET | `/api/applications/tasks/` | Get all tasks for the current user | N/A |
+| POST | `/api/applications/tasks/` | Create a new task | `{ "job_application": int, "title": "string", "description": "string", ... }` |
+| GET | `/api/applications/tasks/<id>/` | Retrieve a specific task | N/A |
+| PATCH | `/api/applications/tasks/<id>/` | Partially update a task | `{ "title": "string", "description": "string", ... }` |
+| DELETE | `/api/applications/tasks/<id>/` | Delete a task | N/A |
+| PATCH | `/api/applications/tasks/<id>/complete/` | Mark task as completed | N/A |
+| PATCH | `/api/applications/tasks/<id>/reopen/` | Reopen a completed task | N/A |
+
+### Application Events
+
+| HTTP Method | URL | Purpose | Request Body |
+| ----------- | --- | ------- | ------------ |
+| GET | `/api/applications/events/` | Get all events for the current user | N/A |
+| POST | `/api/applications/events/` | Create a new event | `{ "job_application": int, "title": "string", "event_type": "string", "starts_at": "datetime", ... }` |
+| GET | `/api/applications/events/<id>/` | Retrieve a specific event | N/A |
+| PATCH | `/api/applications/events/<id>/` | Partially update an event | `{ "title": "string", "starts_at": "datetime", ... }` |
+| DELETE | `/api/applications/events/<id>/` | Delete an event | N/A |
+
+
 ### Kanban View
 
 | HTTP Method | URL | Purpose | Request Body |
@@ -165,16 +219,9 @@ This platform is designed for job seekers to simplify a typically fragmented and
 | GET | `/api/applications/?source_platform=LINKEDIN` | Filter by source platform | `/api/applications/?source_platform=LINKEDIN` |
 | GET | `/api/applications/?is_active=true` | Filter active applications | `/api/applications/?is_active=true` |
 | GET | `/api/applications/?is_active=false` | Filter inactive/deactivated applications | `/api/applications/?is_active=false` |
-
-### Admin User Management
-
-| Method | Endpoint | Description |
-| ------ | -------- | ----------- |
-| GET | `/api/profile/admin/users/` | Retrieve all users with profiles |
-| GET | `/api/profile/admin/users/<id>/` | Retrieve a specific user and profile |
-| PATCH | `/api/profile/admin/users/<id>/` | Update user and profile details |
-| PATCH | `/api/profile/admin/users/<id>/deactivate/` | Deactivate user account |
-| PATCH | `/api/profile/admin/users/<id>/restore/` | Restore previously deactivated user account |
+| GET | `/api/applications/?is_archived=false` | Filter non-archived applications | `/api/applications/?is_archived=false` |
+| GET | `/api/applications/?interest_level=5` | Filter by interest level (1-10) | `/api/applications/?interest_level=5` |
+| GET | `/api/applications/?search=developer` | Search in job title and company | `/api/applications/?search=developer` |
 
 ### Admin Job Application Management
 
@@ -251,8 +298,10 @@ This platform is designed for job seekers to simplify a typically fragmented and
 | currency               | string    |
 | location               | string    |
 | status                 | enum (FOUND, APPLIED, INTERVIEWING, OFFER, REJECTED, WITHDRAWN) |
-| notes                  | text      |
+| interest_level         | integer   |
 | is_active              | boolean   |
+| is_archived            | boolean   |
+| archived_at            | datetime  |
 | created_at             | datetime  |
 | updated_at             | datetime  |
 
@@ -268,6 +317,54 @@ This platform is designed for job seekers to simplify a typically fragmented and
 | phone                  | string    |
 | note                   | text      |
 | is_active              | boolean   |
+| created_at             | datetime  |
+| updated_at             | datetime  |
+
+#### ApplicationNote
+
+| Field                  | Data type |
+| ---------------------- | --------- |
+| applicationNote_id (PK)| integer   |
+| jobApplication_id (FK) | integer   |
+| title                  | string    |
+| note                   | text      |
+| created_at             | datetime  |
+| updated_at             | datetime  |
+
+#### ApplicationTask
+
+| Field                  | Data type |
+| ---------------------- | --------- |
+| applicationTask_id (PK)| integer   |
+| jobApplication_id (FK) | integer   |
+| title                  | string    |
+| description            | text      |
+| due_at                 | datetime  |
+| completed_at           | datetime  |
+| task_type              | enum (TAILOR_RESUME, COVER_LETTER, SUBMIT_APPLICATION, FOLLOW_UP, INTERVIEW_PREP, INTERVIEW_FOLLOW_UP, REJECTION_FEEDBACK, OFFER_REVIEW, CUSTOM) |
+| source_status          | enum (FOUND, APPLIED, INTERVIEWING, OFFER, REJECTED, WITHDRAWN) |
+| auto_created           | boolean   |
+| is_required            | boolean   |
+| triggers_status_change_to | enum (FOUND, APPLIED, INTERVIEWING, OFFER, REJECTED, WITHDRAWN) |
+| created_at             | datetime  |
+| updated_at             | datetime  |
+
+#### ApplicationEvent
+
+| Field                  | Data type |
+| ---------------------- | --------- |
+| applicationEvent_id (PK)| integer  |
+| jobApplication_id (FK) | integer   |
+| title                  | string    |
+| event_type             | enum (INTERVIEW, CALL, DEADLINE, OTHER) |
+| starts_at              | datetime  |
+| ends_at                | datetime  |
+| location               | string    |
+| meeting_link           | string    |
+| contact_name           | string    |
+| contact_email          | string    |
+| contact_phone          | string    |
+| notes                  | text      |
 | created_at             | datetime  |
 | updated_at             | datetime  |
 

@@ -105,7 +105,10 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-db_from_env = dj_database_url.config(conn_max_age=500)
+DATABASE_CONN_MAX_AGE = int(
+    os.environ.get("DATABASE_CONN_MAX_AGE", "0" if DEBUG else "500")
+)
+db_from_env = dj_database_url.config(conn_max_age=DATABASE_CONN_MAX_AGE)
 DATABASES['default'].update(db_from_env)
 
 # Password validation
