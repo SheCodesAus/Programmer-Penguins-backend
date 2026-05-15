@@ -309,7 +309,25 @@ class AdminRestoreJobApplicationView(generics.GenericAPIView):
             {"detail": "Job application has been restored successfully."},
             status=status.HTTP_200_OK,
         )
-    
+
+
+class ApplicationContactAllListView(generics.ListAPIView):
+    serializer_class = ApplicationContactSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ["get"]
+
+    def get_queryset(self):
+        return ApplicationContact.objects.select_related("job_application").filter(
+            job_application__user=self.request.user,
+            is_active=True,
+        ).order_by(
+            "job_application__company_name",
+            "first_name",
+            "last_name",
+            "email",
+        )
+
+
 class ApplicationContactListCreateView(generics.ListCreateAPIView):
     serializer_class = ApplicationContactSerializer
     permission_classes = [permissions.IsAuthenticated]

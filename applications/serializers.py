@@ -202,11 +202,33 @@ class JobApplicationCreateUpdateSerializer(serializers.ModelSerializer):
         return attrs
     
 class ApplicationContactSerializer(serializers.ModelSerializer):
+    job_title = serializers.CharField(source="job_application.job_title", read_only=True)
+    company_name = serializers.CharField(source="job_application.company_name", read_only=True)
+    application_status = serializers.CharField(source="job_application.status", read_only=True)
+    application_status_display = serializers.CharField(
+        source="job_application.get_status_display",
+        read_only=True,
+    )
+    application_is_active = serializers.BooleanField(
+        source="job_application.is_active",
+        read_only=True,
+    )
+    application_is_archived = serializers.BooleanField(
+        source="job_application.is_archived",
+        read_only=True,
+    )
+
     class Meta:
         model = ApplicationContact
         fields = [
             "id",
             "job_application",
+            "job_title",
+            "company_name",
+            "application_status",
+            "application_status_display",
+            "application_is_active",
+            "application_is_archived",
             "first_name",
             "last_name",
             "email",
@@ -219,6 +241,12 @@ class ApplicationContactSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
             "job_application",
+            "job_title",
+            "company_name",
+            "application_status",
+            "application_status_display",
+            "application_is_active",
+            "application_is_archived",
             "created_at",
             "updated_at",
         ]

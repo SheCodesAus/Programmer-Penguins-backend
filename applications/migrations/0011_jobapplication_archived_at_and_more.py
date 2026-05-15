@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('applications', '0010_remove_jobapplication_notes_applicationnote'),
+        ('applications', '0010_merge_20260504_0433'),
     ]
 
     operations = [

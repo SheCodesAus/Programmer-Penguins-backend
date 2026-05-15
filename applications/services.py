@@ -5,7 +5,7 @@ from django.db.models import DateTimeField, Max
 from django.db.models.functions import Coalesce, Greatest
 from django.utils import timezone
 
-from .models import ApplicationEvent, ApplicationTask, JobApplication
+from .models import ApplicationContact, ApplicationEvent, ApplicationTask, JobApplication
 
 
 FOUND_TASKS = [
@@ -258,8 +258,114 @@ def ensure_interview_follow_up_task(event):
     )
 
 
+def split_event_contact_name(contact_name, email, phone):
+    contact_name = (contact_name or "").strip()
+    email = (email or "").strip()
+    phone = (phone or "").strip()
+
+    if contact_name:
+        name_parts = contact_name.split()
+        if len(name_parts) == 1:
+            return name_parts[0][:100], ""
+
+        return name_parts[0][:100], " ".join(name_parts[1:])[:100]
+
+    if email:
+        fallback_name = email.split("@", 1)[0].strip()
+        return (fallback_name or "Contact")[:100], ""
+
+    if phone:
+        return "Contact", ""
+
+    return "", ""
+
+
+def find_matching_event_contact(application, first_name, last_name, email, phone):
+    contacts = ApplicationContact.objects.filter(job_application=application)
+
+    if email:
+        contact = contacts.filter(email__iexact=email).order_by("-is_active", "-updated_at").first()
+        if contact:
+            return contact
+
+    if phone:
+        contact = contacts.filter(phone=phone).order_by("-is_active", "-updated_at").first()
+        if contact:
+            return contact
+
+    if first_name:
+        contact = contacts.filter(
+            first_name__iexact=first_name,
+            last_name__iexact=last_name,
+        ).order_by("-is_active", "-updated_at").first()
+        if contact:
+            return contact
+
+    return None
+
+
+def sync_event_contact(event):
+    contact_name = (event.contact_name or "").strip()
+    email = (event.contact_email or "").strip()
+    phone = (event.contact_phone or "").strip()
+
+    if not any([contact_name, email, phone]):
+        return None
+
+    first_name, last_name = split_event_contact_name(contact_name, email, phone)
+
+    if not first_name:
+        return None
+
+    contact = find_matching_event_contact(
+        event.job_application,
+        first_name,
+        last_name,
+        email,
+        phone,
+    )
+
+    if contact is None:
+        return ApplicationContact.objects.create(
+            job_application=event.job_application,
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            phone=phone,
+            is_active=True,
+        )
+
+    update_fields = []
+
+    if not contact.is_active:
+        contact.is_active = True
+        update_fields.append("is_active")
+
+    if first_name and contact.first_name == "Contact" and contact_name:
+        contact.first_name = first_name
+        update_fields.append("first_name")
+
+    if last_name and not contact.last_name:
+        contact.last_name = last_name
+        update_fields.append("last_name")
+
+    if email and not contact.email:
+        contact.email = email
+        update_fields.append("email")
+
+    if phone and not contact.phone:
+        contact.phone = phone
+        update_fields.append("phone")
+
+    if update_fields:
+        contact.save(update_fields=[*update_fields, "updated_at"])
+
+    return contact
+
+
 def handle_application_event_automation(event):
     application = event.job_application
+    sync_event_contact(event)
 
     if (
         event.event_type == ApplicationEvent.EventType.INTERVIEW
