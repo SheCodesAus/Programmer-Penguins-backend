@@ -60,7 +60,8 @@ INSTALLED_APPS = [
     'dj_rest_auth.registration',
     'accounts',
     'applications',
-    "phonenumber_field",
+    'phonenumber_field',
+    'feedback',
 ]
 
 MIDDLEWARE = [
