@@ -31,4 +31,5 @@ urlpatterns = [
     path('api/applications/', include('applications.urls')),
 
     path("api/feedback/", include("feedback.urls")),
+    path("api/resources/", include("resources.urls")),
 ]

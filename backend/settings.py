@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'applications',
     'phonenumber_field',
     'feedback',
+    'resources',
 ]
 
 MIDDLEWARE = [
