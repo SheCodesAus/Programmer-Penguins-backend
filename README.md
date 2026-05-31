@@ -205,6 +205,24 @@ This platform is designed for job seekers to simplify a typically fragmented and
 | DELETE | `/api/applications/events/<id>/` | Delete an event | N/A |
 
 
+### Feedback API
+
+| HTTP Method | URL | Purpose | Request Body |
+| ----------- | --- | ------- | ------------ |
+| POST | `/api/feedback/` | Send a feedback message | `{ "message": "string", "email": "string" }` |
+
+
+### Resources API
+
+| HTTP Method | URL | Purpose | Request Body |
+| ----------- | --- | ------- | ------------ |
+| GET | `/api/resources/` | List all resources | N/A |
+| POST | `/api/resources/` | Create a new resource | `{ "title": "string", "url": "string", "summary": "string" }` |
+| GET | `/api/resources/metadata/` | Get metadata for available resources | N/A |
+| GET | `/api/resources/chatgpt-metadata/` | Get ChatGPT-compatible metadata for resources | N/A |
+| GET | `/api/resources/<id>/` | Retrieve a resource by ID | N/A |
+
+
 ### Kanban View
 
 | HTTP Method | URL | Purpose | Request Body |
@@ -364,6 +382,41 @@ This platform is designed for job seekers to simplify a typically fragmented and
 | contact_name           | string    |
 | contact_email          | string    |
 | contact_phone          | string    |
+| notes                  | text      |
+| created_at             | datetime  |
+| updated_at             | datetime  |
+
+#### FeedbackMessage
+
+| Field                  | Data type |
+| ---------------------- | --------- |
+| feedbackMessage_id (PK)| integer  |
+| user_id (FK)           | integer   |
+| first_name             | string    |
+| last_name              | string    |
+| email                  | string    |
+| message_type           | enum (BUG, QUESTION, ACCOUNT_RECOVERY, SUGGESTION, OTHER) |
+| related_page           | enum (DASHBOARD, JOB_APPLICATION, TASKS_EVENTS, PROFILE, LOGIN_SIGNUP, ACCOUNT_RECOVERY, OTHER) |
+| page_url               | string    |
+| subject                | string    |
+| message                | text      |
+| consent_given          | boolean   |
+| created_at             | datetime  |
+
+#### Resource
+
+| Field                  | Data type |
+| ---------------------- | --------- |
+| resource_id (PK)       | integer  |
+| user_id (FK)           | integer   |
+| resource_type          | enum (ARTICLE, CHATGPT) |
+| title                  | string    |
+| source_name            | string    |
+| author                 | string    |
+| published_at           | date      |
+| url                    | string    |
+| question               | text      |
+| answer                 | text      |
 | notes                  | text      |
 | created_at             | datetime  |
 | updated_at             | datetime  |

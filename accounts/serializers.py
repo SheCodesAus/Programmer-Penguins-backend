@@ -18,12 +18,14 @@ class UserSerializer(serializers.ModelSerializer):
             "last_name",
             "is_active",
             "is_staff",
+            "is_superuser",
             "date_joined",
         ]
         read_only_fields = [
             "id",
             "is_active",
             "is_staff",
+            "is_superuser",
             "date_joined",
         ]
 
@@ -48,6 +50,8 @@ class CombinedProfileSerializer(serializers.ModelSerializer):
         required=False,
         allow_blank=True,
     )
+    is_staff = serializers.BooleanField(source="user.is_staff", read_only=True)
+    is_superuser = serializers.BooleanField(source="user.is_superuser", read_only=True)
 
     class Meta:
         model = Profile
@@ -57,6 +61,8 @@ class CombinedProfileSerializer(serializers.ModelSerializer):
             "email",
             "first_name",
             "last_name",
+            "is_staff",
+            "is_superuser",
             "desired_role",
             "industry",
             "years_of_experience",
@@ -72,6 +78,8 @@ class CombinedProfileSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
+            "is_staff",
+            "is_superuser",
             "created_at",
             "updated_at",
         ]
@@ -134,6 +142,7 @@ class AdminProfileSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(source="user.last_name", required=False, allow_blank=True)
     is_active = serializers.BooleanField(source="user.is_active", required=False)
     is_staff = serializers.BooleanField(source="user.is_staff", read_only=True)
+    is_superuser = serializers.BooleanField(source="user.is_superuser", read_only=True)
     date_joined = serializers.DateTimeField(source="user.date_joined", read_only=True)
 
     class Meta:
@@ -146,6 +155,7 @@ class AdminProfileSerializer(serializers.ModelSerializer):
             "last_name",
             "is_active",
             "is_staff",
+            "is_superuser",
             "date_joined",
             "desired_role",
             "industry",
@@ -163,6 +173,7 @@ class AdminProfileSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
             "is_staff",
+            "is_superuser",
             "date_joined",
             "created_at",
             "updated_at",
